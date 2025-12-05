@@ -14,6 +14,7 @@ run = ["npm", "run", "start"]
 localPort = 5000
 externalPort = 80
 
+<<<<<<< HEAD
 [[ports]]
 localPort = 34109
 externalPort = 3000
@@ -22,6 +23,8 @@ externalPort = 3000
 localPort = 46397
 externalPort = 3001
 
+=======
+>>>>>>> 68aad9d (Extracted stack files)
 [env]
 PORT = "5000"
 
@@ -45,6 +48,9 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+<<<<<<< HEAD
 
 [agent]
 integrations = ["javascript_websocket:1.0.0"]
+=======
+>>>>>>> 68aad9d (Extracted stack files)
