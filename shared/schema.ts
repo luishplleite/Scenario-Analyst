@@ -1,31 +1,45 @@
 import { sql } from "drizzle-orm";
+<<<<<<< HEAD
 import { pgTable, text, varchar, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // User profiles for the virtual office
+=======
+import { pgTable, text, varchar } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+>>>>>>> 68aad9d (Extracted stack files)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+<<<<<<< HEAD
   displayName: text("display_name"),
   avatarSkin: text("avatar_skin").default("female-blue"),
   spawnX: integer("spawn_x").default(400),
   spawnY: integer("spawn_y").default(300),
   language: text("language").default("pt-br"),
   createdAt: timestamp("created_at").defaultNow(),
+=======
+>>>>>>> 68aad9d (Extracted stack files)
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+<<<<<<< HEAD
   displayName: true,
   avatarSkin: true,
   language: true,
+=======
+>>>>>>> 68aad9d (Extracted stack files)
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+<<<<<<< HEAD
 
 // Player state for real-time synchronization
 export interface PlayerState {
@@ -116,3 +130,5 @@ export interface Translations {
     offline: string;
   };
 }
+=======
+>>>>>>> 68aad9d (Extracted stack files)
