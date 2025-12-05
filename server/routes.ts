@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+<<<<<<< HEAD
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import type { PlayerState } from "@shared/schema";
@@ -8,11 +9,15 @@ interface WebSocketClient extends WebSocket {
   playerId?: string;
   isAlive?: boolean;
 }
+=======
+import { storage } from "./storage";
+>>>>>>> 68aad9d (Extracted stack files)
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+<<<<<<< HEAD
   
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
@@ -263,6 +268,13 @@ export async function registerRoutes(
       }
     });
   }
+=======
+  // put application routes here
+  // prefix all routes with /api
+
+  // use storage to perform CRUD operations on the storage interface
+  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+>>>>>>> 68aad9d (Extracted stack files)
 
   return httpServer;
 }
