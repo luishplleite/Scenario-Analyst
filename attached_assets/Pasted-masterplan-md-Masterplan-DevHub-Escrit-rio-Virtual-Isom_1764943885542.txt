@@ -1,0 +1,501 @@
+masterplan.md
+
+# Masterplan: DevHub - Escritório Virtual Isométrico
+
+## 1. Visão Geral
+O **DevHub** é um ambiente virtual multiplayer 2.5D isométrico que simula um escritório de tecnologia moderno. O objetivo é humanizar o trabalho remoto, permitindo que equipes interajam de forma espontânea através de movimentação de avatares e chat de vídeo/áudio baseado em proximidade (estilo Gather.town).
+
+## 2. Público-Alvo
+* Equipes de desenvolvimento remotas.
+* Comunidades de tecnologia e estudantes.
+* Empresas buscando alternativas ao Zoom/Meet para o dia a dia.
+
+## 3. Funcionalidades Principais (MVP)
+* **Mundo Isométrico:** Renderização de mapas tiled com colisão (paredes, móveis).
+* **Multiplayer em Tempo Real:** Visualização e movimentação de outros usuários sincronizada.
+* **Chat de Proximidade:** Conexão P2P de vídeo/áudio automática ao aproximar-se de outro avatar.
+* **Autenticação e Perfil:** Login seguro e persistência de dados do usuário (skin, nome).
+* **Interface Bilíngue:** Suporte a Português e Inglês.
+
+## 4. Stack Tecnológica
+* **Frontend:** TypeScript, Vite, Phaser 3 (Game Engine).
+* **Backend:** Node.js, Express (Servidor HTTP).
+* **Real-time:** Socket.io (Sincronização de estado), PeerJS (WebRTC para mídia).
+* **Banco de Dados & Auth:** Supabase.
+* **Infraestrutura:** Replit.
+
+## 5. Estratégia de Desenvolvimento
+Foco na arquitetura "Client-Authoritative" para movimento (para responsividade) com validação básica no server, e arquitetura P2P (Peer-to-Peer) para o streaming de vídeo para reduzir custos de servidor.
+
+implementation-plan.md
+# Plano de Implementação: DevHub
+
+## Fase 1: Setup do Ambiente (Replit)
+- [ ] Inicializar projeto Node.js com TypeScript e Vite.
+- [ ] Configurar `package.json` com dependências:
+    - `phaser`, `socket.io-client`, `peerjs`, `@supabase/supabase-js` (Client).
+    - `express`, `socket.io`, `peer` (Server).
+    - `typescript`, `vite`, `ts-node`, `nodemon` (Dev).
+- [ ] Configurar script de build/start para rodar Frontend (Vite) e Backend (Express) simultaneamente ou via proxy.
+- [ ] Configurar projeto no Supabase e obter chaves de API (`SUPABASE_URL`, `SUPABASE_ANON_KEY`).
+
+## Fase 2: Integração Supabase (Auth)
+- [ ] Criar tela de Login/Registro HTML/CSS simples (sobreposta ao canvas do jogo).
+- [ ] Implementar fluxo de autenticação com Supabase (Email/Password ou OAuth).
+- [ ] Criar tabela `profiles` no Supabase para armazenar posição X,Y inicial e Skin ID.
+
+## Fase 3: Core do Phaser (Game Loop)
+- [ ] Configurar `GameScene.ts`.
+- [ ] Carregar Assets (Tileset isométrico e Sprites de personagens).
+- [ ] Implementar renderização do Mapa (JSON Tiled export).
+- [ ] Implementar Player Controller (Input WASD -> Movimento Isométrico).
+- [ ] Adicionar colisão básica com camadas do mapa.
+
+## Fase 4: Multiplayer (Socket.io)
+- [ ] Configurar servidor Socket.io básico.
+- [ ] **Client:** Emitir evento `playerMovement` ao andar.
+- [ ] **Server:** Receber movimento e transmitir `playerMoved` para outros clientes.
+- [ ] **Client:** Gerenciar lista de `otherPlayers` (adicionar/remover sprites ao conectar/desconectar).
+
+## Fase 5: Chat de Proximidade (PeerJS)
+- [ ] Inicializar PeerJS no cliente (gerar Peer ID único).
+- [ ] Associar Socket ID ao Peer ID.
+- [ ] **Lógica de Proximidade (Update Loop):**
+    - Calcular distância euclidiana entre Player Local e Outros Jogadores.
+    - Se `distancia < Threshold` (ex: 150px) -> Iniciar chamada `peer.call()`.
+    - Se `distancia > Threshold` -> Fechar chamada.
+- [ ] Renderizar streams de vídeo em elementos DOM flutuantes acima dos avatares ou em uma barra lateral.
+
+## Fase 6: Polimento e UI
+- [ ] Adicionar seletor de idioma (PT/EN).
+- [ ] Ajustar assets visuais (sombras, sobreposição correta isocline).
+- [ ] Teste de carga básico no Replit.
+
+
+design-guidelines.md
+# Diretrizes de Design e UX: DevHub
+
+## 1. Estilo Visual
+* **Perspectiva:** Isométrica 2.5D (Top-down diagonal).
+* **Tema:** "Dark Mode Tech Office". Ambiente noturno ou interior com iluminação artificial suave.
+* **Arte:** Vetor Flat Moderno. Linhas limpas, sem ruído excessivo.
+* **Paleta de Cores:**
+    * *Fundo/Piso:* Cinza Escuro (#2c3e50), Madeira Clara (#d35400 - accents), Asfalto (#34495e).
+    * *UI:* Preto translúcido com bordas neon (Azul ou Verde) para indicar status online.
+    * *Destaques:* Verde vibrante para plantas e status "Online".
+
+## 2. Assets (Referência para Geração IA)
+* **Tileset:** Seamless, conectável. Pisos de carpete de escritório, divisórias de vidro, paredes de concreto.
+* **Objetos:** Mesas em L pretas, cadeiras gamer, monitores duplos, plantas em vasos de concreto.
+* **Avatares:** Estilo "Low poly" ou "Flat Vector", diferenciados por cor da roupa.
+
+## 3. Experiência do Usuário (UX)
+* **Movimentação:** Teclas WASD ou Setas. A resposta deve ser imediata.
+* **Feedback de Proximidade:**
+    * Ao entrar no raio de outro usuário, um anel visual ou ícone deve aparecer indicando "Conectando Áudio...".
+    * O volume do áudio pode ser espacial (diminui conforme se afasta), se possível implementar.
+* **Interface (HUD):** Minimalista. Apenas botões de Mute (Mic/Câm) e Configurações visíveis.
+
+## 4. Internacionalização
+* Textos de UI devem ser carregados de um arquivo JSON de tradução (`pt-br.json`, `en-us.json`) baseados na escolha do usuário.
+
+app-flow-pages-and-roles.md
+
+# Fluxo do App, Páginas e Papéis
+
+## 1. Papéis de Usuário (Roles)
+* **Visitante:** Usuário não logado. Acesso restrito apenas à tela de Login.
+* **Membro (Dev):** Usuário logado. Pode andar, interagir e usar vídeo/áudio.
+* **Admin (Futuro):** Pode kickar usuários ou modificar o mapa (feature futura).
+
+## 2. Estrutura de Páginas (Views)
+Como é um SPA (Single Page Application) com Canvas, as "páginas" são estados da aplicação:
+
+1.  **Landing / Auth Layer (HTML Overlay)**
+    * Formulário de Login/Cadastro (Supabase).
+    * Logo "DevHub".
+2.  **Lobby / Character Select (HTML Overlay)**
+    * Escolha de cor do Avatar/Nome.
+    * Botão "Entrar no Escritório".
+3.  **Game World (Canvas Phaser)**
+    * O escritório principal.
+    * HUD (Heads-up Display): Botões de microfone, câmera e chat de texto.
+
+## 3. Fluxo do Usuário
+1.  **Acesso:** Usuário abre a URL do Replit.
+2.  **Auth:** Verifica sessão Supabase. Se não existir -> Mostra Login.
+3.  **Setup:** Usuário define permissões de Câmera/Mic no navegador.
+4.  **Spawn:** Avatar aparece em um ponto de spawn predefinido no mapa.
+5.  **Interação:**
+    * Usuário anda até uma mesa.
+    * Encontra colega -> Vídeo abre automaticamente.
+    * Conversam.
+    * Usuário se afasta -> Vídeo fecha.
+6.  **Saída:** Usuário fecha a aba (Socket desconecta, Peer destrói).
+
+. package.json
+Este arquivo define todas as dependências e o script para rodar tudo junto.
+
+O que fazer: Crie um arquivo chamado package.json na raiz e cole o conteúdo abaixo.
+
+JSON
+
+{
+  "name": "devhub-mvp",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"vite\"",
+    "server": "nodemon server/index.js",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "peer": "^1.0.0",
+    "peerjs": "^1.5.1",
+    "phaser": "^3.70.0",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.2"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.0.2",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0"
+  }
+}
+2. server/index.js
+Este é o cérebro do backend. Ele configura o Express, o Socket.io (para movimento) e o PeerServer (para vídeo) na mesma porta.
+
+O que fazer: Crie uma pasta chamada server e dentro dela um arquivo index.js.
+
+JavaScript
+
+import express from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import { ExpressPeerServer } from 'peer';
+import cors from 'cors';
+import 'dotenv/config';
+
+const app = express();
+const httpServer = createServer(app);
+const PORT = process.env.PORT || 3000;
+
+// Configuração de CORS (Permitir que o Vite acesse o Backend)
+app.use(cors());
+
+// Setup do PeerServer (Sinalização para Vídeo/Áudio)
+// Acessível em /peerjs
+const peerServer = ExpressPeerServer(httpServer, {
+  debug: true,
+  path: '/'
+});
+app.use('/peerjs', peerServer);
+
+// Setup do Socket.io (Sinalização para Movimento/Estado)
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*", // Em produção, restrinja isso para a URL do seu app
+    methods: ["GET", "POST"]
+  }
+});
+
+// Estado em memória (para o MVP)
+const players = {};
+
+io.on('connection', (socket) => {
+  console.log(`⚡ Usuário conectado: ${socket.id}`);
+
+  // Quando um jogador entra, cria um registro básico
+  players[socket.id] = {
+    x: 400, // Posição inicial padrão
+    y: 300,
+    playerId: socket.id
+  };
+
+  // Envia a lista de jogadores atuais para o novo conectado
+  socket.emit('currentPlayers', players);
+
+  // Avisa os outros que um novo jogador entrou
+  socket.broadcast.emit('newPlayer', players[socket.id]);
+
+  // Recebe movimento do cliente
+  socket.on('playerMovement', (movementData) => {
+    if (players[socket.id]) {
+      players[socket.id].x = movementData.x;
+      players[socket.id].y = movementData.y;
+      
+      // Retransmite a nova posição para todos, exceto o remetente
+      socket.broadcast.emit('playerMoved', players[socket.id]);
+    }
+  });
+
+  // Gerencia desconexão
+  socket.on('disconnect', () => {
+    console.log(`👋 Usuário desconectou: ${socket.id}`);
+    delete players[socket.id];
+    io.emit('playerDisconnected', socket.id);
+  });
+});
+
+// Rota de teste
+app.get('/', (req, res) => {
+  res.send('DevHub Server is Running! 🚀');
+});
+
+// Inicia o servidor
+httpServer.listen(PORT, () => {
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  console.log(`📹 PeerServer disponível em /peerjs`);
+});
+3. Configuração Extra: vite.config.js
+Para garantir que o Frontend (Vite) consiga falar com o Backend no Replit sem erros de porta, crie um arquivo vite.config.js na raiz:
+
+JavaScript
+
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  server: {
+    proxy: {
+      '/socket.io': {
+        target: 'http://localhost:3000',
+        ws: true
+      },
+      '/peerjs': {
+        target: 'http://localhost:3000',
+        ws: true
+      }
+    }
+  }
+});
+📝 Próximo Passo Sugerido
+Agora você precisa instalar as dependências. No terminal do Replit (Shell), rode:
+
+Bash
+
+npm install
+Depois de instalar, se você clicar em "Run", o Replit deve tentar rodar o script dev e você verá no console: 🚀 Servidor rodando na porta 3000
+
+
+index.html
+O Vite precisa de um ponto de entrada HTML na raiz do projeto para carregar o script.
+
+O que fazer: Crie o arquivo index.html na raiz do projeto (fora da pasta src).
+
+HTML
+
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DevHub - Virtual Office</title>
+    <style>
+      body { margin: 0; overflow: hidden; background-color: #2c3e50; }
+      canvas { display: block; }
+    </style>
+  </head>
+  <body>
+    <div id="game-container"></div>
+    
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+2. src/main.ts
+Este arquivo inicializa o Phaser. Configura a resolução, física e carrega a cena principal.
+
+O que fazer: Crie a pasta src e o arquivo main.ts dentro dela.
+
+TypeScript
+
+import Phaser from 'phaser';
+import GameScene from './scenes/GameScene';
+
+const config: Phaser.Types.Core.GameConfig = {
+  type: Phaser.AUTO, // Usa WebGL por padrão
+  width: window.innerWidth,
+  height: window.innerHeight,
+  parent: 'game-container', // ID da div no HTML
+  backgroundColor: '#2c3e50', // Cor de fundo do escritório (Dark Mode)
+  pixelArt: true, // Importante para assets isométricos/pixel art ficarem nítidos
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { y: 0 }, // Sem gravidade (top-down)
+      debug: true // Mostra caixas de colisão (útil para dev)
+    }
+  },
+  scene: [GameScene]
+};
+
+// Inicia o jogo
+new Phaser.Game(config);
+3. src/scenes/GameScene.ts
+Aqui é onde a mágica acontece. Eu adicionei placeholders (quadrados coloridos) para você testar a movimentação multiplayer imediatamente, mesmo sem ter subido os assets gráficos ainda.
+
+O que fazer: Crie a pasta src/scenes e o arquivo GameScene.ts dentro dela.
+
+TypeScript
+
+import Phaser from 'phaser';
+import { io, Socket } from 'socket.io-client';
+
+export default class GameScene extends Phaser.Scene {
+  private socket: Socket;
+  private player: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody | undefined;
+  private otherPlayers: Phaser.Physics.Arcade.Group | undefined;
+  private cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
+  private isConnected: boolean = false;
+
+  constructor() {
+    super('GameScene');
+  }
+
+  preload() {
+    // AQUI: Carregaríamos os assets reais (tileset, sprites).
+    // Como ainda não temos, vamos criar gráficos "on the fly" no create().
+  }
+
+  create() {
+    // 1. Configurar Grupo de Outros Jogadores
+    this.otherPlayers = this.physics.add.group();
+
+    // 2. Conectar ao Socket.io
+    // Nota: No Replit, a conexão é automática na mesma URL
+    this.socket = io(); 
+
+    this.socket.on('connect', () => {
+      console.log('✅ Conectado ao servidor Socket.io!');
+      this.isConnected = true;
+    });
+
+    // 3. Gerenciar Eventos de Multiplayer
+    
+    // Recebe a lista de jogadores atuais ao entrar
+    this.socket.on('currentPlayers', (players: any) => {
+      Object.keys(players).forEach((id) => {
+        if (players[id].playerId === this.socket.id) {
+          this.createMyPlayer(players[id]);
+        } else {
+          this.addOtherPlayer(players[id]);
+        }
+      });
+    });
+
+    // Novo jogador entrou
+    this.socket.on('newPlayer', (playerInfo: any) => {
+      this.addOtherPlayer(playerInfo);
+    });
+
+    // Jogador desconectou
+    this.socket.on('playerDisconnected', (playerId: string) => {
+      this.otherPlayers?.getChildren().forEach((otherPlayer: any) => {
+        if (playerId === otherPlayer.playerId) {
+          otherPlayer.destroy();
+        }
+      });
+    });
+
+    // Jogador se moveu
+    this.socket.on('playerMoved', (playerInfo: any) => {
+      this.otherPlayers?.getChildren().forEach((otherPlayer: any) => {
+        if (playerInfo.playerId === otherPlayer.playerId) {
+          otherPlayer.setPosition(playerInfo.x, playerInfo.y);
+        }
+      });
+    });
+
+    // 4. Controles (Setas do teclado)
+    if (this.input.keyboard) {
+        this.cursors = this.input.keyboard.createCursorKeys();
+    }
+  }
+
+  update() {
+    // Só processa se o jogador já foi criado e está conectado
+    if (!this.player || !this.cursors || !this.isConnected) return;
+
+    // Reseta velocidade
+    this.player.setVelocity(0);
+    const speed = 200;
+    let moved = false;
+
+    // Lógica de Movimento (Básica 2D - depois mudaremos para Isométrico real)
+    if (this.cursors.left.isDown) {
+      this.player.setVelocityX(-speed);
+      moved = true;
+    } else if (this.cursors.right.isDown) {
+      this.player.setVelocityX(speed);
+      moved = true;
+    }
+
+    if (this.cursors.up.isDown) {
+      this.player.setVelocityY(-speed);
+      moved = true;
+    } else if (this.cursors.down.isDown) {
+      this.player.setVelocityY(speed);
+      moved = true;
+    }
+
+    // Se houve movimento, envia para o servidor
+    if (moved) {
+      this.socket.emit('playerMovement', { 
+        x: this.player.x, 
+        y: this.player.y 
+      });
+    }
+  }
+
+  // --- Funções Auxiliares ---
+
+  private createMyPlayer(playerInfo: any) {
+    // Cria um retângulo azul para representar VOCÊ (placeholder)
+    const graphics = this.make.graphics({ x: 0, y: 0, add: false });
+    graphics.fillStyle(0x0000ff, 1); // Azul
+    graphics.fillRect(0, 0, 32, 32);
+    graphics.generateTexture('playerTexture', 32, 32);
+
+    this.player = this.physics.add.sprite(playerInfo.x, playerInfo.y, 'playerTexture');
+    
+    // A câmera segue você
+    this.cameras.main.startFollow(this.player);
+    this.cameras.main.setZoom(1.5); // Zoom para ver melhor
+  }
+
+  private addOtherPlayer(playerInfo: any) {
+    // Cria um retângulo vermelho para OUTROS (placeholder)
+    if (!this.textures.exists('otherPlayerTexture')) {
+        const graphics = this.make.graphics({ x: 0, y: 0, add: false });
+        graphics.fillStyle(0xff0000, 1); // Vermelho
+        graphics.fillRect(0, 0, 32, 32);
+        graphics.generateTexture('otherPlayerTexture', 32, 32);
+    }
+
+    const otherPlayer: any = this.physics.add.sprite(playerInfo.x, playerInfo.y, 'otherPlayerTexture');
+    otherPlayer.playerId = playerInfo.playerId;
+    this.otherPlayers?.add(otherPlayer);
+  }
+}
+🚀 Hora de Testar!
+Certifique-se de que todos os arquivos estão salvos.
+
+No Shell do Replit, pare o processo anterior (Ctrl+C) e rode novamente:
+
+Bash
+
+npm run dev
+Abra a janela "Webview" do Replit (ou a aba nova).
+
+O Teste de Ouro: Abra o link do projeto em duas abas diferentes do navegador.
+
+Mova o quadrado azul em uma aba e veja se o quadrado vermelho se mexe na outra.
+
+Se funcionar, parabéns! Você tem a infraestrutura multiplayer em tempo real rodando. 🎉
+
